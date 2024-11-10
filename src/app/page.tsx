@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Camera, Mic, Copy, Link, VolumeX, Volume2 } from "lucide-react"
+import OpenAI from "openai";
 
 export default function Page() {
   const [leftVideoStream, setLeftVideoStream] = React.useState<MediaStream | null>(null)
@@ -18,6 +19,7 @@ export default function Page() {
   const leftAudioRef = React.useRef<HTMLAudioElement>(null)
   const rightAudioRef = React.useRef<HTMLAudioElement>(null)
 
+  
   const addLog = (message: string) => {
     setLogs(prevLogs => [...prevLogs, `${new Date().toLocaleTimeString()}: ${message}`])
   }
