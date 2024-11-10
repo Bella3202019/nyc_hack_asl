@@ -1,7 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Camera, Mic, Copy, Link, VolumeX, Volume2 } from "lucide-react";
+
+import { Camera, Mic, Copy, Link, VolumeX, Volume2 } from "lucide-react"
+
 
 export default function Page() {
   const [leftVideoStream, setLeftVideoStream] = React.useState<MediaStream | null>(null)
