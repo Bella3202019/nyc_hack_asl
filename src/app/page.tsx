@@ -28,7 +28,9 @@ export default function Page() {
 
   // Used for Audio output purpose
   const [leftAudioSrc, setLeftAudioSrc] = React.useState("")
-
+  const [rightMediaSrc, setRightMediaSrc] = React.useState("")
+  const [leftMediaSrc, setLeftMediaSrc] = React.useState("")
+  
   // Used for operational button display
   const [isLeftCameraEnabled, setIsLeftCamerEnabled] = React.useState(false)
   const [isLeftMicEnabled, setIsLeftMicEnabled] = React.useState(false)
@@ -151,6 +153,22 @@ export default function Page() {
     }
   };
 
+  const handleRightMediaUpload = (event) => {
+    const file = event.target.files[0]
+    if (file) {
+      const mediaUrl = URL.createObjectURL(file);
+      setRightMediaSrc(mediaUrl);
+    }
+  }
+
+  const handleLeftMediaUpload = (event) => {
+    const file = event.target.files[0]
+    if (file) {
+      const mediaUrl = URL.createObjectURL(file);
+      setLeftMediaSrc(mediaUrl);
+    }
+  }
+
   const generateInviteLink = () => {
     const link = `${window.location.origin}${window.location.pathname}?invite=${Date.now()}`
     setInviteLink(link)
@@ -178,8 +196,11 @@ export default function Page() {
 
       <div className="flex flex-col md:flex-row justify-between mb-8 gap-8">
         <div className="w-full md:w-[45%] space-y-4">
-          <video ref={leftVideoRef} className="w-full aspect-video bg-muted mb-4" autoPlay muted playsInline />
+          
+          <video ref={leftVideoRef} src={leftMediaSrc || undefined} controls className="w-full aspect-video bg-muted mb-4" autoPlay muted playsInline />
           <div className="flex justify-center gap-4">
+          <input type="file" accept="audio/*,video/mp4" onChange={handleLeftMediaUpload} className="mb-2"/>
+
             <button onClick={() => handleMedia('camera', 'left')} 
             className={`p-2 rounded transition-colors ${
               isLeftCameraEnabled 
@@ -247,8 +268,10 @@ export default function Page() {
 
 
         <div className="w-full md:w-[45%] space-y-4">
-          <video ref={rightVideoRef} className="w-full aspect-video bg-muted mb-4" autoPlay muted playsInline />
+          <video ref={rightVideoRef} src={rightMediaSrc || undefined} controls className="w-full aspect-video bg-muted mb-4" autoPlay muted playsInline />
           <div className="flex justify-center gap-4">
+          <input type="file" accept="audio/*,video/mp4" onChange={handleRightMediaUpload} className="mb-2"/>
+
             <button onClick={() => handleMedia('camera', 'right')}
             className={`p-2 rounded transition-colors ${
               isRightCameraEnabled 
