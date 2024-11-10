@@ -26,6 +26,9 @@ export default function Page() {
   const mediaRecorderRef: MediaRecorderRef = React.useRef(null);
   const chunksRef = React.useRef<Blob[]>([]);
 
+  // Used for Audio output purpose
+  const [leftAudioSrc, setLeftAudioSrc] = React.useState("")
+
   // Used for operational button display
   const [isLeftCameraEnabled, setIsLeftCamerEnabled] = React.useState(false)
   const [isLeftMicEnabled, setIsLeftMicEnabled] = React.useState(false)
@@ -36,6 +39,7 @@ export default function Page() {
   const [isRightMicEnabled, setIsRightMicEnabled] = React.useState(false)
   const [isRightAudioMuted, setIsRightAudioMuted] = React.useState(true);
 
+  // 
   const addLog = (message: string) => {
     setLogs(prevLogs => [...prevLogs, `${new Date().toLocaleTimeString()}: ${message}`])
   }
@@ -138,6 +142,15 @@ export default function Page() {
     }
   };
 
+
+  const handleAudioUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const audioURL = URL.createObjectURL(file);
+      setLeftAudioSrc(audioURL);
+    }
+  };
+
   const generateInviteLink = () => {
     const link = `${window.location.origin}${window.location.pathname}?invite=${Date.now()}`
     setInviteLink(link)
@@ -183,7 +196,19 @@ export default function Page() {
             } text-white`}>
               <Mic className="h-6 w-6" />
             </button>
-            <div className="flex space-x-2">
+            <button 
+                onClick={() => {
+                  if (leftAudioRef.current) {
+                    leftAudioRef.current.muted = !leftAudioRef.current.muted;
+                    setIsLeftAudioMuted(!isLeftAudioMuted)
+                  }
+                }}
+                className={`p-2 rounded transition-colors ${
+                  !isLeftAudioMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
+                } text-white`}
+              >
+                {leftAudioRef.current?.muted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+              </button>
             {isLeftCameraEnabled && (
               <button
                 onClick={isRecording ? stopRecording : startRecording}
@@ -202,31 +227,18 @@ export default function Page() {
               </button>
             )}
           </div>
-          </div>
 
           <div className="bg-gray-100 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">Audio</h3>
+            <h3 className="font-semibold mb-2 text-black">Audio</h3>
             <div className="flex items-center space-x-2">
-              <audio ref={leftAudioRef} autoPlay className="w-full" />
-              <button
-                onClick={() => {
-                  if (leftAudioRef.current) {
-                    leftAudioRef.current.muted = !leftAudioRef.current.muted;
-                    setIsLeftAudioMuted(!isLeftAudioMuted)
-                  }
-                }}
-                className={`p-2 rounded transition-colors ${
-                  !isLeftAudioMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
-                } text-white`}
-              >
-                {leftAudioRef.current?.muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-              </button>
+            <input type="file" accept="audio/mp3" onChange={handleAudioUpload} className="mb-2"/>
+              <audio ref={leftAudioRef} src={leftAudioSrc} autoPlay controls className="w-full" />
             </div>
           </div>
 
           <div className="bg-gray-100 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">Text</h3>
-            <div className="bg-white p-2 rounded whitespace-nowrap overflow-hidden">
+            <h3 className="font-semibold mb-2 text-black">Text</h3>
+            <div className="bg-white p-2 rounded whitespace-nowrap overflow-hidden text-black">
               {leftText}
             </div>
           </div>
@@ -253,12 +265,7 @@ export default function Page() {
             } text-white`}>
               <Mic className="h-6 w-6" />
             </button>
-          </div>
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">Audio</h3>
-            <div className="flex items-center space-x-2">
-              <audio ref={rightAudioRef} autoPlay className="w-full" />
-              <button
+            <button
                 onClick={() => {
                   if (rightAudioRef.current) {
                     rightAudioRef.current.muted = !rightAudioRef.current.muted;
@@ -269,18 +276,25 @@ export default function Page() {
                   !isRightAudioMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
                 } text-white`}
               >
-                {rightAudioRef.current?.muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                {rightAudioRef.current?.muted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
               </button>
+          </div>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h3 className="font-semibold mb-2 text-black">Audio</h3>
+            <div className="flex items-center space-x-2">
+              <audio ref={rightAudioRef} autoPlay controls className="w-full" />
             </div>
           </div>
           <div className="bg-gray-100 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">Text</h3>
-            <div className="bg-white p-2 rounded whitespace-nowrap overflow-hidden">
+            <h3 className="font-semibold mb-2 text-black">Text</h3>
+            <div className="bg-white p-2 rounded whitespace-nowrap overflow-hidden text-black">
               {rightText}
             </div>
           </div>
         </div>
       </div>
+
+
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Invite Link</h2>
         <div className="flex flex-col sm:flex-row gap-4">
