@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Camera, Mic, Copy, Link, VolumeX, Volume2, Square, Circle } from "lucide-react"
+import { Camera, Mic, Copy, Link, VolumeX, Volume2 } from "lucide-react";
 
 export default function Page() {
   const [leftVideoStream, setLeftVideoStream] = React.useState<MediaStream | null>(null)
@@ -18,30 +18,7 @@ export default function Page() {
   const leftAudioRef = React.useRef<HTMLAudioElement>(null)
   const rightAudioRef = React.useRef<HTMLAudioElement>(null)
 
-  // Primarily for recording purpose
-  const [isRecording, setIsRecording] = React.useState(false);
-  interface MediaRecorderRef {
-    current: MediaRecorder | null;
-  }
-  const mediaRecorderRef: MediaRecorderRef = React.useRef(null);
-  const chunksRef = React.useRef<Blob[]>([]);
-
-  // Used for Audio output purpose
-  const [leftAudioSrc, setLeftAudioSrc] = React.useState("")
-  const [rightMediaSrc, setRightMediaSrc] = React.useState("")
-  const [leftMediaSrc, setLeftMediaSrc] = React.useState("")
   
-  // Used for operational button display
-  const [isLeftCameraEnabled, setIsLeftCamerEnabled] = React.useState(false)
-  const [isLeftMicEnabled, setIsLeftMicEnabled] = React.useState(false)
-  const [isLeftAudioMuted, setIsLeftAudioMuted] = React.useState(true);
-
-
-  const [isRightCameraEnabled, setIsRightCamerEnabled] = React.useState(false)
-  const [isRightMicEnabled, setIsRightMicEnabled] = React.useState(false)
-  const [isRightAudioMuted, setIsRightAudioMuted] = React.useState(true);
-
-  // 
   const addLog = (message: string) => {
     setLogs(prevLogs => [...prevLogs, `${new Date().toLocaleTimeString()}: ${message}`])
   }
@@ -56,12 +33,9 @@ export default function Page() {
           addLog(`Camera ${side} stopped`)
           if (side === 'left') {
             setLeftVideoStream(null)
-            setIsLeftCamerEnabled(false)
             if (leftVideoRef.current) leftVideoRef.current.srcObject = null
-            if (isRecording) stopRecording()
           } else {
             setRightVideoStream(null)
-            setIsRightCamerEnabled(false)
             if (rightVideoRef.current) rightVideoRef.current.srcObject = null
           }
         } else {
@@ -69,11 +43,9 @@ export default function Page() {
           addLog(`Camera access granted for ${side} side`)
           if (side === 'left') {
             setLeftVideoStream(stream)
-            setIsLeftCamerEnabled(true)
             if (leftVideoRef.current) leftVideoRef.current.srcObject = stream
           } else {
             setRightVideoStream(stream)
-            setIsRightCamerEnabled(true)
             if (rightVideoRef.current) rightVideoRef.current.srcObject = stream
           }
         }
@@ -84,11 +56,9 @@ export default function Page() {
           addLog(`Microphone ${side} stopped`)
           if (side === 'left') {
             setLeftAudioStream(null)
-            setIsLeftMicEnabled(false)
             if (leftAudioRef.current) leftAudioRef.current.srcObject = null
           } else {
             setRightAudioStream(null)
-            setIsRightMicEnabled(false)
             if (rightAudioRef.current) rightAudioRef.current.srcObject = null
           }
         } else {
@@ -96,76 +66,15 @@ export default function Page() {
           addLog(`Microphone access granted for ${side} side`)
           if (side === 'left') {
             setLeftAudioStream(stream)
-            setIsLeftMicEnabled(true)
             if (leftAudioRef.current) leftAudioRef.current.srcObject = stream
           } else {
             setRightAudioStream(stream)
-            setIsRightMicEnabled(true)
             if (rightAudioRef.current) rightAudioRef.current.srcObject = stream
           }
         }
       }
     } catch (error) {
       addLog(`Failed to access ${type} for ${side} side: ${error}`)
-    }
-  }
-
-  const startRecording = () => {
-    if (!leftVideoStream) return;
-    
-    chunksRef.current = [];
-    const mediaRecorder = new MediaRecorder(leftVideoStream);
-    
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        chunksRef.current.push(event.data);
-      }
-    };
-
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `recorded-video-${new Date().toISOString()}.webm`;
-      a.click();
-      URL.revokeObjectURL(url);
-    };
-
-    mediaRecorder.start(1000);
-    mediaRecorderRef.current = mediaRecorder;
-    setIsRecording(true);
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-    }
-  };
-
-
-  const handleAudioUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const audioURL = URL.createObjectURL(file);
-      setLeftAudioSrc(audioURL);
-    }
-  };
-
-  const handleRightMediaUpload = (event) => {
-    const file = event.target.files[0]
-    if (file) {
-      const mediaUrl = URL.createObjectURL(file);
-      setRightMediaSrc(mediaUrl);
-    }
-  }
-
-  const handleLeftMediaUpload = (event) => {
-    const file = event.target.files[0]
-    if (file) {
-      const mediaUrl = URL.createObjectURL(file);
-      setLeftMediaSrc(mediaUrl);
     }
   }
 
@@ -192,132 +101,74 @@ export default function Page() {
   return (
     <div className="w-full min-h-screen p-4 bg-background">
       <h1 className="text-3xl font-bold text-center mb-8">American Sign Language (ASL) Expressor</h1>
-
-
       <div className="flex flex-col md:flex-row justify-between mb-8 gap-8">
         <div className="w-full md:w-[45%] space-y-4">
-          
-          <video ref={leftVideoRef} src={leftMediaSrc || undefined} controls className="w-full aspect-video bg-muted mb-4" autoPlay muted playsInline />
+          <video ref={leftVideoRef} className="w-full aspect-video bg-muted mb-4" autoPlay muted playsInline />
           <div className="flex justify-center gap-4">
-          <input type="file" accept="audio/*,video/mp4" onChange={handleLeftMediaUpload} className="mb-2"/>
-
-            <button onClick={() => handleMedia('camera', 'left')} 
-            className={`p-2 rounded transition-colors ${
-              isLeftCameraEnabled 
-              ? 'bg-blue-500 hover:bg-blue-600' 
-              : 'bg-red-500 hover:bg-red-600'
-            } text-white`}>
+            <button onClick={() => handleMedia('camera', 'left')} className="p-2 bg-blue-500 text-white rounded">
               <Camera className="h-6 w-6" />
             </button>
-            <button onClick={() => handleMedia('microphone', 'left')}
-            className={`p-2 rounded transition-colors ${
-              isLeftMicEnabled 
-              ? 'bg-blue-500 hover:bg-blue-600' 
-              : 'bg-red-500 hover:bg-red-600'
-            } text-white`}>
+            <button onClick={() => handleMedia('microphone', 'left')} className="p-2 bg-blue-500 text-white rounded">
               <Mic className="h-6 w-6" />
             </button>
-            <button 
+          </div>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h3 className="font-semibold mb-2">Audio</h3>
+            <div className="flex items-center space-x-2">
+              <audio ref={leftAudioRef} autoPlay className="w-full" />
+              <button
                 onClick={() => {
                   if (leftAudioRef.current) {
                     leftAudioRef.current.muted = !leftAudioRef.current.muted;
-                    setIsLeftAudioMuted(!isLeftAudioMuted)
                   }
                 }}
-                className={`p-2 rounded transition-colors ${
-                  !isLeftAudioMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
-                } text-white`}
+                className="p-2 bg-blue-500 text-white rounded"
               >
-                {leftAudioRef.current?.muted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+                {leftAudioRef.current?.muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </button>
-            {isLeftCameraEnabled && (
-              <button
-                onClick={isRecording ? stopRecording : startRecording}
-                className={`p-2 rounded transition-colors ${
-                  isRecording 
-                    ? 'bg-red-500 hover:bg-red-600' 
-                    : 'bg-blue-500 hover:bg-green-600'
-                } text-white`}
-                title={isRecording ? 'Stop Recording' : 'Start Recording'}
-              >
-                {isRecording ? (
-                  <Square className="h-6 w-6" />
-                ) : (
-                  <Circle className="h-6 w-6 fill-current" />
-                )}
-              </button>
-            )}
-          </div>
-
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2 text-black">Audio</h3>
-            <div className="flex items-center space-x-2">
-            <input type="file" accept="audio/mp3" onChange={handleAudioUpload} className="mb-2"/>
-              <audio ref={leftAudioRef} src={leftAudioSrc} autoPlay controls className="w-full" />
             </div>
           </div>
-
           <div className="bg-gray-100 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2 text-black">Text</h3>
-            <div className="bg-white p-2 rounded whitespace-nowrap overflow-hidden text-black">
+            <h3 className="font-semibold mb-2">Text</h3>
+            <div className="bg-white p-2 rounded whitespace-nowrap overflow-hidden">
               {leftText}
             </div>
           </div>
         </div>
-
-
-
         <div className="w-full md:w-[45%] space-y-4">
-          <video ref={rightVideoRef} src={rightMediaSrc || undefined} controls className="w-full aspect-video bg-muted mb-4" autoPlay muted playsInline />
+          <video ref={rightVideoRef} className="w-full aspect-video bg-muted mb-4" autoPlay muted playsInline />
           <div className="flex justify-center gap-4">
-          <input type="file" accept="audio/*,video/mp4" onChange={handleRightMediaUpload} className="mb-2"/>
-
-            <button onClick={() => handleMedia('camera', 'right')}
-            className={`p-2 rounded transition-colors ${
-              isRightCameraEnabled 
-              ? 'bg-blue-500 hover:bg-blue-600' 
-              : 'bg-red-500 hover:bg-red-600'
-            } text-white`}>
+            <button onClick={() => handleMedia('camera', 'right')} className="p-2 bg-blue-500 text-white rounded">
               <Camera className="h-6 w-6" />
             </button>
-            <button onClick={() => handleMedia('microphone', 'right')} 
-            className={`p-2 rounded transition-colors ${
-              isRightMicEnabled 
-              ? 'bg-blue-500 hover:bg-blue-600' 
-              : 'bg-red-500 hover:bg-red-600'
-            } text-white`}>
+            <button onClick={() => handleMedia('microphone', 'right')} className="p-2 bg-blue-500 text-white rounded">
               <Mic className="h-6 w-6" />
             </button>
-            <button
+          </div>
+          <div className="bg-gray-100 p-4 rounded-lg">
+            <h3 className="font-semibold mb-2">Audio</h3>
+            <div className="flex items-center space-x-2">
+              <audio ref={rightAudioRef} autoPlay className="w-full" />
+              <button
                 onClick={() => {
                   if (rightAudioRef.current) {
                     rightAudioRef.current.muted = !rightAudioRef.current.muted;
-                    setIsRightAudioMuted(!isRightAudioMuted)
                   }
                 }}
-                className={`p-2 rounded transition-colors ${
-                  !isRightAudioMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'
-                } text-white`}
+                className="p-2 bg-blue-500 text-white rounded"
               >
-                {rightAudioRef.current?.muted ? <VolumeX className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+                {rightAudioRef.current?.muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </button>
-          </div>
-          <div className="bg-gray-100 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2 text-black">Audio</h3>
-            <div className="flex items-center space-x-2">
-              <audio ref={rightAudioRef} autoPlay controls className="w-full" />
             </div>
           </div>
           <div className="bg-gray-100 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2 text-black">Text</h3>
-            <div className="bg-white p-2 rounded whitespace-nowrap overflow-hidden text-black">
+            <h3 className="font-semibold mb-2">Text</h3>
+            <div className="bg-white p-2 rounded whitespace-nowrap overflow-hidden">
               {rightText}
             </div>
           </div>
         </div>
       </div>
-
-
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Invite Link</h2>
         <div className="flex flex-col sm:flex-row gap-4">
